@@ -1,0 +1,12 @@
+# BMAD and Gemini
+_bmad/
+_bmad-output/
+.gemini/
+GEMINI.md
+
+# Environment and Secrets
+.env
+*.bin
+
+# VS Code
+.vscode/
