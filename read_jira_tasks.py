@@ -23,8 +23,8 @@ def get_jira_tasks(email, token, domain="demoia.atlassian.net"):
     
     query = {
         "jql": "assignee = currentUser() ORDER BY created DESC",
-        "maxResults": 10,
-        "fields": "summary,status,key"
+        "maxResults": 50,
+        "fields": "summary,status,key,issuetype,parent"
     }
     
     response = requests.request(
@@ -42,14 +42,24 @@ def get_jira_tasks(email, token, domain="demoia.atlassian.net"):
             print("No tasks found.")
             return
             
-        print(f"{'Key':<12} | {'Summary':<50} | {'Status'}")
-        print("-" * 80)
+        print(f"{'Key':<12} | {'Type':<10} | {'Summary':<40} | {'Status':<12} | {'Epic'}")
+        print("-" * 100)
         for issue in issues:
+            fields = issue.get("fields", {})
             key = issue.get("key")
-            summary = issue.get("fields", {}).get("summary", "No Summary")
-            status = issue.get("fields", {}).get("status", {}).get("name", "Unknown")
-            summary = (summary[:47] + "..") if len(summary) > 47 else summary
-            print(f"{key:<12} | {summary:<50} | {status}")
+            issuetype = fields.get("issuetype", {}).get("name", "Unknown")
+            summary = fields.get("summary", "No Summary")
+            status = fields.get("status", {}).get("name", "Unknown")
+            
+            parent = fields.get("parent", {})
+            epic = parent.get("fields", {}).get("summary", "None") if parent else "None"
+            epic_key = parent.get("key", "") if parent else ""
+            epic_display = f"{epic_key}: {epic}" if epic_key else "None"
+
+            summary = (summary[:37] + "..") if len(summary) > 37 else summary
+            epic_display = (epic_display[:27] + "..") if len(epic_display) > 27 else epic_display
+            
+            print(f"{key:<12} | {issuetype:<10} | {summary:<40} | {status:<12} | {epic_display}")
     else:
         print(f"Error: {response.status_code}")
         print(response.text)
